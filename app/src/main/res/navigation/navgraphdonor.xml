@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navgraphdonor"
+    app:startDestination="@id/donorhome">
+
+    <fragment
+        android:id="@+id/donorhome"
+        android:name="com.example.last.fragments.Donorhome"
+        android:label="Donorhome"
+        tools:layout="@layout/fragment_donorhome">
+        >
+        <action
+            android:id="@+id/action_donorhome_to_donorsearchhospitals2"
+            app:destination="@id/donorsearchhospitals" />
+        <action
+            android:id="@+id/action_donorhome_to_donorsearchrecipients2"
+            app:destination="@id/donorsearchrecipients" />
+        <action
+            android:id="@+id/action_donorhome_to_donornotifications2"
+            app:destination="@id/donornotifications" />
+    </fragment>
+    <fragment
+        android:id="@+id/donorsearchhospitals"
+        android:name="com.example.last.fragments.Donorsearchhospitals"
+        android:label="fragment_donorsearchhospitals"
+        tools:layout="@layout/fragment_donorsearchhospitals" />
+    <fragment
+        android:id="@+id/donorsearchrecipients"
+        android:name="com.example.last.fragments.Donorsearchrecipients"
+        android:label="fragment_donorsearchrecipients"
+        tools:layout="@layout/fragment_donorsearchrecipients" />
+    <fragment
+        android:id="@+id/donornotifications"
+        android:name="com.example.last.fragments.Donornotifications"
+        android:label="fragment_donornotifications"
+        tools:layout="@layout/fragment_donornotifications" />
+</navigation>

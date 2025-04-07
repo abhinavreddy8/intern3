@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "541558922397",
+    "project_id": "organ-donation-mega",
+    "storage_bucket": "organ-donation-mega.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:541558922397:android:5c67e746a3bf300a028874",
+        "android_client_info": {
+          "package_name": "com.example.last"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4QLe-8RdSLJBQ-PEdOl5Iw7kwLgJ2WLU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

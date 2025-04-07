@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors -->
+    <color name="primary">#1976D2</color> <!-- RGB(25, 118, 210) -->
+    <color name="success">#388E3C</color> <!-- RGB(56, 142, 60) -->
+
+    <!-- Text Colors -->
+    <color name="black">#212121</color> <!-- RGB(33, 33, 33) -->
+    <color name="white">#FFFFFF</color> <!-- RGB(255, 255, 255) -->
+
+    <!-- Background Colors -->
+    <color name="light_gray">#F5F5F5</color> <!-- RGB(245, 245, 245) -->
+</resources>

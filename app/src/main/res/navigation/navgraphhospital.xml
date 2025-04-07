@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navgraphhospital"
+    app:startDestination="@id/hospitalhome">
+
+    <fragment
+        android:id="@+id/hospitalhome"
+        android:name="com.example.last.fragments.Hospitalhome"
+        android:label="fragment_hospitalhome"
+        tools:layout="@layout/fragment_hospitalhome" >
+        <action
+            android:id="@+id/action_hospitalhome_to_hospitalsearchdonors"
+            app:destination="@id/hospitalsearchdonors" />
+        <action
+            android:id="@+id/action_hospitalhome_to_hospitalrequests"
+            app:destination="@id/hospitalrequests" />
+        <action
+            android:id="@+id/action_hospitalhome_to_hospitalacceptance"
+            app:destination="@id/hospitalacceptance" />
+    </fragment>
+    <fragment
+        android:id="@+id/hospitalacceptance"
+        android:name="com.example.last.fragments.Hospitalacceptance"
+        android:label="fragment_hospitalacceptance"
+        tools:layout="@layout/fragment_hospitalacceptance" />
+    <fragment
+        android:id="@+id/hospitalrequests"
+        android:name="com.example.last.fragments.Hospitalrequests"
+        android:label="fragment_hospitalrequests"
+        tools:layout="@layout/fragment_hospitalrequests" />
+    <fragment
+        android:id="@+id/hospitalsearchdonors"
+        android:name="com.example.last.fragments.Hospitalsearchdonors"
+        android:label="fragment_hospitalsearchdonors"
+        tools:layout="@layout/fragment_hospitalsearchdonors" />
+</navigation>

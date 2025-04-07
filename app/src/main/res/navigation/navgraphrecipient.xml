@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navgraphrecipient"
+    app:startDestination="@id/recipinethome">
+
+    <fragment
+        android:id="@+id/recipinethome"
+        android:name="com.example.last.fragments.Recipinethome"
+        android:label="fragment_recipinethome"
+        tools:layout="@layout/fragment_recipinethome" >
+        <action
+            android:id="@+id/action_recipinethome_to_recipientsearchdonors"
+            app:destination="@id/recipientsearchdonors" />
+        <action
+            android:id="@+id/action_recipinethome_to_recipientsearchhospitals"
+            app:destination="@id/recipientsearchhospitals" />
+        <action
+            android:id="@+id/action_recipinethome_to_recipientnotifications"
+            app:destination="@id/recipientnotifications" />
+    </fragment>
+    <fragment
+        android:id="@+id/recipientsearchdonors"
+        android:name="com.example.last.fragments.Recipientsearchdonors"
+        android:label="fragment_recipientsearchdonors"
+        tools:layout="@layout/fragment_recipientsearchdonors" />
+    <fragment
+        android:id="@+id/recipientsearchhospitals"
+        android:name="com.example.last.fragments.Recipientsearchhospitals"
+        android:label="fragment_recipientsearchhospitals"
+        tools:layout="@layout/fragment_recipientsearchhospitals" />
+    <fragment
+        android:id="@+id/recipientnotifications"
+        android:name="com.example.last.fragments.Recipientnotifications"
+        android:label="fragment_recipientnotifications"
+        tools:layout="@layout/fragment_recipientnotifications" />
+</navigation>

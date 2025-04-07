@@ -1,0 +1,92 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="16dp"
+    android:id="@+id/main">
+
+    <!-- Lottie Animation at the Top -->
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/lottieAnimation"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:lottie_rawRes="@raw/lottie"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true" />
+
+    <!-- CardView for Input Section -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/lottieAnimation">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:spacing="8dp">
+
+            <!-- Email Input -->
+            <EditText
+                android:id="@+id/emailInput"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@android:drawable/editbox_background"
+                android:hint="Email Address"
+                android:inputType="textEmailAddress"
+                android:padding="12dp"
+                android:textSize="16sp" />
+
+            <!-- Login Button -->
+            <Button
+                android:id="@+id/loginButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="12dp"
+                android:padding="10dp"
+                android:text="Login"
+                android:textSize="16sp" />
+
+            <!-- Send OTP Button -->
+            <Button
+                android:id="@+id/sendOtp"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="12dp"
+                android:padding="10dp"
+                android:text="Send Email"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- TextView for Importance of Donors -->
+    <TextView
+        android:id="@+id/donorImportance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:lineSpacingExtra="4dp"
+        android:padding="16dp"
+        android:text="Organ transplantation is often the only hope for individuals suffering from end-stage organ failure. Every year, millions wait for a life-saving transplant, but only a fraction receive one in time. The availability of organs is limited, making every donor's contribution invaluable. As a recipient, registering for a transplant brings new hope for a second chance at life."
+        android:textAlignment="center"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView2"
+        app:layout_constraintVertical_bias="0.198" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

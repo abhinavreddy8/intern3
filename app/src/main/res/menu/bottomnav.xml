@@ -1,0 +1,21 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+
+        android:title="Home" />
+
+    <item
+        android:id="@+id/nav_search_hospital"
+
+        android:title="Search Hospital" />
+
+    <item
+        android:id="@+id/nav_search_recipient"
+
+        android:title="Search Recipient" />
+
+    <item
+        android:id="@+id/nav_notifications"
+
+        android:title="Notifications" />
+</menu>
