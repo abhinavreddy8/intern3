@@ -9,10 +9,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.example.last.fragments.*
+import com.example.last.screens.DonorNotificationScreen
+import com.example.last.ui.DonorSearchHospital
+import com.example.last.ui.DonorSearchRecipientScreen
+import com.example.last.ui.HospitalDetailScreen
+//import com.example.last.ui.NotificationScreen
+import com.example.last.ui.RecipientDetailScreen
 import com.example.last.ui.theme.LastTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
@@ -75,12 +84,41 @@ fun DonorApp() {
             composable(Screen.DonorHome.route) {
                 Donorhome(viewModel = donorHomeViewModel)
             }
-            composable(Screen.DonorSearchHospitals.route) { Donorsearchhospitals() }
-            composable(Screen.DonorSearchRecipients.route) { Donorsearchrecipients() }
-            composable(Screen.DonorNotifications.route) { Donornotifications() }
+            composable(Screen.DonorSearchHospitals.route) { DonorSearchHospital (
+                navigateToHospitalDetail = { hospitalId ->
+                    navController.navigate(HospitalRoutes.HospitalDetail.createRoute(hospitalId))
+                }
+            )
+
+             }
+            composable(Screen.DonorSearchRecipients.route) {
+                DonorSearchRecipientScreen(
+                    navController
+                )
+            }
+
+            composable(
+                route = Screen.RecipientDetail.route,
+                arguments = listOf(navArgument("recipientId") { defaultValue = "" })
+            ) { backStackEntry ->
+                val recipientId = backStackEntry.arguments?.getString("recipientId") ?: ""
+                RecipientDetailScreen(recipientId = recipientId, onBackPressed = { navController.popBackStack() })
+            }
+            composable(
+                route = HospitalRoutes.HospitalDetail.route,
+                arguments = listOf(navArgument("hospitalId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val hospitalId = backStackEntry.arguments?.getString("hospitalId") ?: ""
+                HospitalDetailScreen(hospitalId = hospitalId, onBackClick = { navController.popBackStack() })
+            }
+
+            composable(Screen.DonorNotifications.route) {
+                DonorNotificationScreen()
+            }
         }
     }
 }
+
 
 @Composable
 fun DonorBottomNavigation(navController: NavHostController) {
@@ -91,27 +129,39 @@ fun DonorBottomNavigation(navController: NavHostController) {
         Screen.DonorNotifications
     )
 
-    var selectedScreen by remember { mutableStateOf(Screen.DonorHome.route) }
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
 
-    NavigationBar {
+    NavigationBar(
+        tonalElevation = 4.dp,
+        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+    ) {
         screens.forEach { screen ->
             NavigationBarItem(
                 icon = {
                     Icon(
                         painter = painterResource(id = getIcon(screen.route)),
-                        contentDescription = screen.route
+                        contentDescription = screen.route,
+                        modifier = Modifier.size(24.dp) // Reduced icon size
                     )
                 },
-                label = { Text(screen.route.replaceFirstChar { it.uppercase() }) },
-                selected = selectedScreen == screen.route,
+                selected = currentRoute == screen.route,
                 onClick = {
-                    selectedScreen = screen.route
                     navController.navigate(screen.route) {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                alwaysShowLabel = false, // Hide labels
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                )
             )
         }
     }
@@ -120,10 +170,10 @@ fun DonorBottomNavigation(navController: NavHostController) {
 @Composable
 fun getIcon(route: String): Int {
     return when (route) {
-        Screen.DonorHome.route -> R.drawable.donor
-        Screen.DonorSearchHospitals.route -> R.drawable.donor
-        Screen.DonorSearchRecipients.route -> R.drawable.donor
-        Screen.DonorNotifications.route -> R.drawable.donor
+        Screen.DonorHome.route -> R.drawable.home
+        Screen.DonorSearchHospitals.route -> R.drawable.searchicon
+        Screen.DonorSearchRecipients.route -> R.drawable.searchrecipient
+        Screen.DonorNotifications.route -> R.drawable.notification
         else -> R.drawable.donor
     }
 }
@@ -133,4 +183,7 @@ sealed class Screen(val route: String) {
     object DonorSearchHospitals : Screen("donorsearchhospitals")
     object DonorSearchRecipients : Screen("donorsearchrecipients")
     object DonorNotifications : Screen("donornotifications")
+    object RecipientDetail : Screen("recipientdetail/{recipientId}") {
+        fun createRoute(recipientId: String) = "recipientdetail/$recipientId"
+    }
 }

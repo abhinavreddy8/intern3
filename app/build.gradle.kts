@@ -22,7 +22,9 @@ android {
     }
     buildFeatures{
         compose=true
+        mlModelBinding = true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion="1.5.3"
     }
@@ -47,43 +49,86 @@ android {
     viewBinding {
         enable = true
     }
+    packagingOptions {
+        excludes += setOf(
+            "META-INF/AL2.0",
+            "META-INF/LGPL2.1",
+            "META-INF/LICENSE.md",
+            "META-INF/LICENSE-notice.md",
+            "META-INF/*.properties",
+            "META-INF/NOTICE",
+            "META-INF/NOTICE.txt",
+            "META-INF/LICENSE",
+            "META-INF/LICENSE.txt",
+            "META-INF/DEPENDENCIES",
+            "**/attach_hotspot_windows.dll",
+            "META-INF/licenses/**",
+            "win32-x86-64/attach_hotspot_windows.dll",
+            "win32-x86/attach_hotspot_windows.dll"
+        )
+        resources.excludes += setOf(
+            "DebugProbesKt.bin",
+            "kotlin-tooling-metadata.json"
+        )
+    }
+
+
 }
 
 dependencies {
-    implementation("androidx.compose.material:material:1.5.3") // Use stable version
-    implementation("androidx.compose.ui:ui-tooling-preview:1.5.3")
-    implementation("androidx.activity:activity-compose:1.7.2")
-    implementation(libs.androidx.material3.android)
-    implementation(libs.androidx.legacy.support.v4)
-    implementation(libs.androidx.lifecycle.livedata.ktx)
-    implementation(libs.androidx.fragment.ktx)
-    debugImplementation("androidx.compose.ui:ui-tooling:1.5.3")
+    // Core Android
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.database)
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    implementation("com.airbnb.android:lottie:6.2.0")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")
-    implementation ("com.google.firebase:firebase-storage:20.0.0")
-    implementation ("com.google.firebase:firebase-storage:20.2.0")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+    // Compose
+    implementation("androidx.compose.ui:ui:1.5.4")
+    implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.5.4")
+    implementation("androidx.activity:activity-compose:1.8.0")
+    implementation("androidx.navigation:navigation-compose:2.7.4")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.5.4")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+
+    // Lifecycle & Coroutines
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // Image Loading
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
+    // TensorFlow Lite
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
+
+    // Location Services
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Lottie
+    implementation("com.airbnb.android:lottie:6.1.0")
+
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.7.4")
+    // Other dependencies
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    //retrofit
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-    implementation ("com.github.bumptech.glide:glide:4.16.0")
-    annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
-    implementation("androidx.navigation:navigation-compose:2.7.0")
-    implementation("io.coil-kt:coil-compose:2.2.2") // For image loading
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-
-
 }

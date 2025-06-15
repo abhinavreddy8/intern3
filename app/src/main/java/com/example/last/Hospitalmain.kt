@@ -1,6 +1,5 @@
 package com.example.last
 
-//import Hospitalhome
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,17 +10,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.example.last.fragments.*
+import com.example.last.ui.DonorDetailScreen
+import com.example.last.ui.HospitalSearchDonors
 import com.example.last.ui.theme.LastTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import android.util.Log
+import androidx.compose.ui.unit.dp
+//import com.example.last.ui.HospitalNotificationsScreen
+import com.example.last.ui.HospitalRequestHandlerScreen
+import com.example.last.ui.HospitalSearchRecipientScreen
+import com.example.last.ui.RecipientDetailScreen
+
+//import com.example.last.ui.HospitalRequestHandlerScreen
 
 class Hospitalmain : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize the storage FirebaseApp
         initializeStorageFirebase()
 
         setContent {
@@ -37,15 +47,20 @@ class Hospitalmain : ComponentActivity() {
     }
 
     private fun initializeStorageFirebase() {
-        val storageOptions = FirebaseOptions.Builder()
-            .setProjectId("socialmedia-b9148") // Replace with your Firebase Storage project's ID
-            .setApplicationId("1:924036427672:android:75e24d5ebe6dd3f35cc5ed") // Replace with your Firebase app's application ID
-            .setApiKey("AIzaSyBLVNr5M0sHOTtGpqBvn8ula-knHx0vxvc") // Replace with your Firebase app's API key
-            .setStorageBucket("socialmedia-b9148.appspot.com") // Replace with your Firebase Storage bucket URL
-            .build()
+        try {
+            val storageOptions = FirebaseOptions.Builder()
+                .setProjectId("socialmedia-b9148")
+                .setApplicationId("1:924036427672:android:75e24d5ebe6dd3f35cc5ed")
+                .setApiKey("AIzaSyBLVNr5M0sHOTtGpqBvn8ula-knHx0vxvc")
+                .setStorageBucket("socialmedia-b9148.appspot.com")
+                .build()
 
-        // Initialize Firebase with these options, giving it a different name
-        FirebaseApp.initializeApp(this, storageOptions, "hospitalStorageApp")
+            if (FirebaseApp.getApps(this).none { it.name == "hospitalStorageApp" }) {
+                FirebaseApp.initializeApp(this, storageOptions, "hospitalStorageApp")
+            }
+        } catch (e: Exception) {
+            Log.e("Hospitalmain", "Error initializing Firebase: ${e.message}")
+        }
     }
 }
 
@@ -54,14 +69,19 @@ fun HospitalApp() {
     val navController = rememberNavController()
     val hospitalHomeViewModel: HospitalHomeViewModel = viewModel()
 
-    // Get the storage app instance
     val storageApp = remember {
-        FirebaseApp.getInstance("hospitalStorageApp")
+        try {
+            FirebaseApp.getInstance("hospitalStorageApp")
+        } catch (e: Exception) {
+            Log.e("HospitalApp", "Error getting Firebase app: ${e.message}")
+            null
+        }
     }
 
-    // Initialize storage in the ViewModel
     LaunchedEffect(Unit) {
-        hospitalHomeViewModel.initializeStorage(storageApp)
+        storageApp?.let {
+            hospitalHomeViewModel.initializeStorage(it)
+        }
     }
 
     Scaffold(
@@ -73,11 +93,40 @@ fun HospitalApp() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(HospitalScreen.HospitalHome.route) {
+                Log.d("Navigation", "Navigating to HospitalHome")
                 Hospitalhome(viewModel = hospitalHomeViewModel)
             }
-            composable(HospitalScreen.HospitalSearchDonors.route) { Hospitalsearchdonors() }
-            composable(HospitalScreen.HospitalSearchRecipients.route) { Hospitalrequests() }
-            composable(HospitalScreen.HospitalNotifications.route) { Hospitalacceptance() }
+            composable(HospitalScreen.HospitalSearchDonors.route) {
+                Log.d("Navigation", "Navigating to HospitalSearchDonors")
+                HospitalSearchDonors(navController)
+            }
+            composable(HospitalScreen.HospitalSearchRecipients.route) {
+                Log.d("Navigation", "Navigating to HospitalSearchRecipients")
+                HospitalSearchRecipientScreen(navController)
+            }
+
+            composable(
+                route = Screen.RecipientDetail.route,
+                arguments = listOf(navArgument("recipientId") { defaultValue = "" })
+            ) { backStackEntry ->
+                val recipientId = backStackEntry.arguments?.getString("recipientId") ?: ""
+                RecipientDetailScreen(recipientId = recipientId, onBackPressed = { navController.popBackStack() })
+            }
+            composable(HospitalScreen.HospitalNotifications.route) {
+                Log.d("Navigation", "Navigating to HospitalNotifications")
+
+                HospitalRequestsScreen() // This matches the composable you shared
+
+            }
+            composable(
+                route = DonorRoutes.DonorDetail.route,
+                arguments = listOf(navArgument("donorId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                DonorDetailScreen(
+                    donorId = backStackEntry.arguments?.getString("donorId") ?: "",
+                    onBackPressed = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
@@ -91,27 +140,42 @@ fun HospitalBottomNavigation(navController: NavHostController) {
         HospitalScreen.HospitalNotifications
     )
 
-    var selectedScreen by remember { mutableStateOf(HospitalScreen.HospitalHome.route) }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar {
+    NavigationBar(
+        tonalElevation = 4.dp,
+        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+    ) {
         screens.forEach { screen ->
             NavigationBarItem(
                 icon = {
                     Icon(
                         painter = painterResource(id = getHospitalIcon(screen.route)),
-                        contentDescription = screen.route
+                        contentDescription = screen.route,
+                        modifier = Modifier.size(24.dp) // Reduced icon size
                     )
                 },
-                label = { Text(screen.route.replaceFirstChar { it.uppercase() }) },
-                selected = selectedScreen == screen.route,
+                selected = currentRoute == screen.route,
                 onClick = {
-                    selectedScreen = screen.route
+                    Log.d("Navigation", "Bottom nav clicked: ${screen.route}")
                     navController.navigate(screen.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                alwaysShowLabel = false, // Hides label for minimal design
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                )
             )
         }
     }
@@ -120,10 +184,10 @@ fun HospitalBottomNavigation(navController: NavHostController) {
 @Composable
 fun getHospitalIcon(route: String): Int {
     return when (route) {
-        HospitalScreen.HospitalHome.route -> R.drawable.hospital
-        HospitalScreen.HospitalSearchDonors.route -> R.drawable.hospital
-        HospitalScreen.HospitalSearchRecipients.route -> R.drawable.hospital
-        HospitalScreen.HospitalNotifications.route -> R.drawable.hospital
+        HospitalScreen.HospitalHome.route -> R.drawable.home
+        HospitalScreen.HospitalSearchDonors.route -> R.drawable.searchdonor
+        HospitalScreen.HospitalSearchRecipients.route -> R.drawable.searchrecipient
+        HospitalScreen.HospitalNotifications.route -> R.drawable.notification
         else -> R.drawable.hospital
     }
 }
@@ -134,3 +198,10 @@ sealed class HospitalScreen(val route: String) {
     object HospitalSearchRecipients : HospitalScreen("hospitalsearchrecipients")
     object HospitalNotifications : HospitalScreen("hospitalnotifications")
 }
+
+
+//object DonorRoutes {
+//    object DonorDetail {
+//        const val route = "donorDetail/{donorId}"
+//    }
+//}

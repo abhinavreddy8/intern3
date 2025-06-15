@@ -37,7 +37,11 @@ data class HospitalData(
     val icuFacilities: String = "",
     val operatingRooms: String = "",
     val certifications: String = "",
-    val accreditations: String = ""
+    val accreditations: String = "",
+    // New location fields
+    val latitude: String = "",
+    val longitude: String = "",
+    val currentLocation: String = ""
 )
 
 class HospitalHomeViewModel : ViewModel() {
@@ -109,7 +113,10 @@ class HospitalHomeViewModel : ViewModel() {
                             icuFacilities = snapshot.child("icuFacilities").value?.toString() ?: "",
                             operatingRooms = snapshot.child("operatingRooms").value?.toString() ?: "",
                             certifications = snapshot.child("certifications").value?.toString() ?: "",
-                            accreditations = snapshot.child("accreditations").value?.toString() ?: ""
+                            accreditations = snapshot.child("accreditations").value?.toString() ?: "",
+                            latitude = snapshot.child("latitude").value?.toString() ?: "",
+                            longitude = snapshot.child("longitude").value?.toString() ?: "",
+                            currentLocation = snapshot.child("currentLocation").value?.toString() ?: ""
                         )
                         continuation.resume(data, null)
                     } else {
@@ -178,6 +185,10 @@ class HospitalHomeViewModel : ViewModel() {
             "operatingRooms" -> currentData.copy(operatingRooms = value)
             "certifications" -> currentData.copy(certifications = value)
             "accreditations" -> currentData.copy(accreditations = value)
+            // New location fields
+            "latitude" -> currentData.copy(latitude = value)
+            "longitude" -> currentData.copy(longitude = value)
+            "currentLocation" -> currentData.copy(currentLocation = value)
             else -> currentData
         }
         _hospitalData.value = updatedData
@@ -264,6 +275,10 @@ class HospitalHomeViewModel : ViewModel() {
 
     fun toggleEditMode() {
         _isEditing.value = !_isEditing.value
+    }
+
+    fun showToast(message: String) {
+        _toastMessage.value = message
     }
 
     fun clearToastMessage() {

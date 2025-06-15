@@ -1,4 +1,10 @@
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -16,10 +22,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.last.fragments.DonorHomeViewModel
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 @Composable
 fun Donorhome(
@@ -27,7 +36,40 @@ fun Donorhome(
 ) {
     var isEditing by remember { mutableStateOf(false) }
     val donorData by viewModel.donorData.collectAsState(initial = null)
+    val toastMessage by viewModel.toastMessage.collectAsState()
     val context = LocalContext.current
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    // Permission state
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // Show toast messages from ViewModel
+    LaunchedEffect(toastMessage) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearToastMessage()
+        }
+    }
+
+    // Permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasLocationPermission = isGranted
+        if (isGranted) {
+            viewModel.showToast("Permission granted, fetching location...")
+            fetchLocation(fusedLocationClient, context, viewModel)
+        } else {
+            viewModel.showToast("Location permission denied")
+        }
+    }
 
     // Image picker launchers
     val profileImageLauncher = rememberLauncherForActivityResult(
@@ -51,7 +93,6 @@ fun Donorhome(
     LaunchedEffect(Unit) {
         viewModel.fetchDonorData()
         viewModel.fetchProfileImage()
-
     }
 
     Column(
@@ -106,8 +147,6 @@ fun Donorhome(
         )
 
         // Gender Selection
-        // Gender Selection
-        // Gender Selection
         var selectedGender by remember { mutableStateOf("") }
 
         LaunchedEffect(donorData?.gender) {
@@ -129,7 +168,7 @@ fun Donorhome(
                         onClick = {
                             if (isEditing) {
                                 selectedGender = gender
-                                viewModel.updateField("gender", gender) // Update Firebase
+                                viewModel.updateField("gender", gender)
                             }
                         },
                         enabled = isEditing
@@ -138,8 +177,6 @@ fun Donorhome(
                 }
             }
         }
-
-
 
         // Contact Information
         DonorTextField(
@@ -251,10 +288,42 @@ fun Donorhome(
         // Location Section
         SectionHeader(text = "Location Details")
 
+        // Current coordinates display
+        DonorTextField(
+            value = donorData?.latitude?.toString() ?: "",
+            onValueChange = { /* Read-only field */ },
+            label = "Latitude",
+            enabled = false
+        )
+
+        DonorTextField(
+            value = donorData?.longitude?.toString() ?: "",
+            onValueChange = { /* Read-only field */ },
+            label = "Longitude",
+            enabled = false
+        )
+
+        // Fetch Location Button
+        Button(
+            onClick = {
+                if (hasLocationPermission) {
+                    fetchLocation(fusedLocationClient, context, viewModel)
+                } else {
+                    locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            enabled = true
+        ) {
+            Text("Fetch Current Location")
+        }
+
         DonorTextField(
             value = donorData?.currentLocation ?: "",
             onValueChange = { viewModel.updateField("currentLocation", it) },
-            label = "Current Location",
+            label = "Current Location (Address)",
             enabled = isEditing
         )
 
@@ -300,6 +369,71 @@ fun Donorhome(
                 }
             }
         }
+    }
+}
+
+@SuppressLint("MissingPermission")
+fun fetchLocation(
+    fusedLocationClient: FusedLocationProviderClient,
+    context: Context,
+    viewModel: DonorHomeViewModel
+) {
+    try {
+        viewModel.showToast("Getting location...")
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    viewModel.showToast("Location obtained: ${location.latitude}, ${location.longitude}")
+                    viewModel.updateField("latitude", location.latitude.toString())
+                    viewModel.updateField("longitude", location.longitude.toString())
+                } else {
+                    viewModel.showToast("Location is null. Please ensure location services are enabled.")
+                    requestLocationUpdates(fusedLocationClient, context, viewModel)
+                }
+            }
+            .addOnFailureListener { e ->
+                viewModel.showToast("Failed to get location: ${e.message}")
+            }
+    } catch (e: Exception) {
+        viewModel.showToast("Error in location fetch: ${e.message}")
+    }
+}
+
+@SuppressLint("MissingPermission")
+private fun requestLocationUpdates(
+    fusedLocationClient: FusedLocationProviderClient,
+    context: Context,
+    viewModel: DonorHomeViewModel
+) {
+    try {
+        val locationRequest = com.google.android.gms.location.LocationRequest.create().apply {
+            priority = com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = 10000
+            fastestInterval = 5000
+            numUpdates = 1
+        }
+
+        val locationCallback = object : com.google.android.gms.location.LocationCallback() {
+            override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+                super.onLocationResult(locationResult)
+                locationResult.lastLocation?.let { location ->
+                    viewModel.showToast("Location update received: ${location.latitude}, ${location.longitude}")
+                    viewModel.updateField("latitude", location.latitude.toString())
+                    viewModel.updateField("longitude", location.longitude.toString())
+                    fusedLocationClient.removeLocationUpdates(this)
+                }
+            }
+        }
+
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            context.mainLooper
+        )
+
+        viewModel.showToast("Requested location updates")
+    } catch (e: Exception) {
+        viewModel.showToast("Failed to request location updates: ${e.message}")
     }
 }
 

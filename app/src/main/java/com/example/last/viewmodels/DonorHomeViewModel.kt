@@ -39,7 +39,9 @@ data class DonorData(
     val currentLocation: String = "",
     val preferredLocation: String = "",
     val profileImageUrl: String = "",
-    val gender: String = ""
+    val gender: String = "",
+    val latitude: String = "",  // New field
+    val longitude: String = ""  // New field
 )
 
 class DonorHomeViewModel : ViewModel() {
@@ -82,7 +84,6 @@ class DonorHomeViewModel : ViewModel() {
                 }
                 currentDonorData = data
                 _donorData.value = data
-                // Fetch profile image after getting donor data
                 fetchProfileImage()
             } catch (e: Exception) {
                 _toastMessage.value = "Failed to load data: ${e.message}"
@@ -101,7 +102,6 @@ class DonorHomeViewModel : ViewModel() {
                             contactNumber = snapshot.child("contactNumber").value?.toString() ?: "",
                             email = snapshot.child("email").value?.toString() ?: "",
                             address = snapshot.child("address").value?.toString() ?: "",
-
                             bloodGroup = snapshot.child("bloodGroup").value?.toString() ?: "",
                             organAvailable = snapshot.child("organAvailable").value?.toString() ?: "",
                             medicalHistory = snapshot.child("medicalHistory").value?.toString() ?: "",
@@ -114,8 +114,9 @@ class DonorHomeViewModel : ViewModel() {
                             currentLocation = snapshot.child("currentLocation").value?.toString() ?: "",
                             preferredLocation = snapshot.child("preferredLocation").value?.toString() ?: "",
                             profileImageUrl = snapshot.child("profileImageUrl").value?.toString() ?: "",
-                            gender = snapshot.child("gender").value?.toString() ?: ""
-
+                            gender = snapshot.child("gender").value?.toString() ?: "",
+                            latitude = snapshot.child("latitude").value?.toString() ?: "",
+                            longitude = snapshot.child("longitude").value?.toString() ?: ""
                         )
                         continuation.resume(data, null)
                     } else {
@@ -151,21 +152,6 @@ class DonorHomeViewModel : ViewModel() {
         }
     }
 
-    fun fetchImageFromStorage(path: String, onSuccess: (Uri) -> Unit, onFailure: (Exception) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val imageRef = storageReference.child(path)
-                imageRef.downloadUrl.addOnSuccessListener { uri ->
-                    onSuccess(uri)
-                }.addOnFailureListener { e ->
-                    onFailure(e)
-                }
-            } catch (e: Exception) {
-                onFailure(e)
-            }
-        }
-    }
-
     fun updateField(field: String, value: String) {
         val currentData = _donorData.value ?: DonorData()
         val updatedData = when (field) {
@@ -186,6 +172,8 @@ class DonorHomeViewModel : ViewModel() {
             "currentLocation" -> currentData.copy(currentLocation = value)
             "preferredLocation" -> currentData.copy(preferredLocation = value)
             "gender" -> currentData.copy(gender = value)
+            "latitude" -> currentData.copy(latitude = value)
+            "longitude" -> currentData.copy(longitude = value)
             else -> currentData
         }
         _donorData.value = updatedData
@@ -270,8 +258,8 @@ class DonorHomeViewModel : ViewModel() {
         }
     }
 
-    fun toggleEditMode() {
-        _isEditing.value = !_isEditing.value
+    fun showToast(message: String) {
+        _toastMessage.value = message
     }
 
     fun clearToastMessage() {

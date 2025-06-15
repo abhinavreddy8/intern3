@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
 
         // Set up Firebase Storage for another project
             //initializeStorageFirebase()
+        //setupTFLiteModel()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -57,3 +58,4 @@ class MainActivity : AppCompatActivity() {
 //        FirebaseApp.initializeApp(this, storageOptions, "storageApp")
 //    }
 }
+

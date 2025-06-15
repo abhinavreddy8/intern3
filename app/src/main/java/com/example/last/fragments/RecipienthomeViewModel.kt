@@ -42,7 +42,9 @@ data class RecipientData(
     val currentLocation: String = "",
     val preferredHospitals: String = "",
     val profileImageUrl: String = "",
-    val gender: String = ""
+    val gender: String = "",
+    val latitude: String = "",
+    val longitude: String = ""
 )
 
 class RecipientHomeViewModel : ViewModel() {
@@ -119,7 +121,9 @@ class RecipientHomeViewModel : ViewModel() {
                             currentLocation = snapshot.child("currentLocation").value?.toString() ?: "",
                             preferredHospitals = snapshot.child("preferredHospitals").value?.toString() ?: "",
                             profileImageUrl = snapshot.child("profileImageUrl").value?.toString() ?: "",
-                            gender = snapshot.child("gender").value?.toString() ?: ""
+                            gender = snapshot.child("gender").value?.toString() ?: "",
+                            latitude = snapshot.child("latitude").value?.toString() ?: "",
+                            longitude = snapshot.child("longitude").value?.toString() ?: ""
                         )
                         continuation.resume(data, null)
                     } else {
@@ -193,6 +197,8 @@ class RecipientHomeViewModel : ViewModel() {
             "currentLocation" -> currentData.copy(currentLocation = value)
             "preferredHospitals" -> currentData.copy(preferredHospitals = value)
             "gender" -> currentData.copy(gender = value)
+            "latitude" -> currentData.copy(latitude = value)
+            "longitude" -> currentData.copy(longitude = value)
             else -> currentData
         }
         _recipientData.value = updatedData
@@ -279,6 +285,10 @@ class RecipientHomeViewModel : ViewModel() {
 
     fun toggleEditMode() {
         _isEditing.value = !_isEditing.value
+    }
+
+    fun showToast(message: String) {
+        _toastMessage.value = message
     }
 
     fun clearToastMessage() {

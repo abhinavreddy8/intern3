@@ -20,16 +20,36 @@
             android:id="@+id/action_recipinethome_to_recipientnotifications"
             app:destination="@id/recipientnotifications" />
     </fragment>
+
     <fragment
         android:id="@+id/recipientsearchdonors"
         android:name="com.example.last.fragments.Recipientsearchdonors"
         android:label="fragment_recipientsearchdonors"
-        tools:layout="@layout/fragment_recipientsearchdonors" />
+        tools:layout="@layout/fragment_recipientsearchdonors" >
+        <!-- Add action from search donors to donor detail -->
+        <action
+            android:id="@+id/action_recipientsearchdonors_to_donorDetailFragment"
+            app:destination="@id/donorDetailFragment" />
+    </fragment>
+
+    <!-- Add new fragment for donor detail -->
+    <fragment
+        android:id="@+id/donorDetailFragment"
+        android:name="com.example.last.fragments.Donordetail"
+        android:label="fragment_donor_detail"
+        tools:layout="@layout/fragment_donordetail" >
+        <!-- Add argument to pass donor ID -->
+        <argument
+            android:name="donorId"
+            app:argType="string" />
+    </fragment>
+
     <fragment
         android:id="@+id/recipientsearchhospitals"
         android:name="com.example.last.fragments.Recipientsearchhospitals"
         android:label="fragment_recipientsearchhospitals"
         tools:layout="@layout/fragment_recipientsearchhospitals" />
+
     <fragment
         android:id="@+id/recipientnotifications"
         android:name="com.example.last.fragments.Recipientnotifications"

@@ -9,19 +9,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
+import androidx.navigation.*
 import androidx.navigation.compose.*
 import com.example.last.fragments.*
+import com.example.last.ui.RecipientSearchHospitals
+import com.example.last.ui.Recipientsearchdonors
 import com.example.last.ui.theme.LastTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import com.example.last.ui.DonorDetailScreen
+import com.example.last.ui.HospitalDetailScreen
+import com.example.last.HospitalRoutes
 
 class Recipientmain : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize the storage FirebaseApp
         initializeStorageFirebase()
 
         setContent {
@@ -38,13 +43,12 @@ class Recipientmain : ComponentActivity() {
 
     private fun initializeStorageFirebase() {
         val storageOptions = FirebaseOptions.Builder()
-            .setProjectId("socialmedia-b9148") // Replace with your Firebase Storage project's ID
-            .setApplicationId("1:924036427672:android:75e24d5ebe6dd3f35cc5ed") // Replace with your Firebase app's application ID
-            .setApiKey("AIzaSyBLVNr5M0sHOTtGpqBvn8ula-knHx0vxvc") // Replace with your Firebase app's API key
-            .setStorageBucket("socialmedia-b9148.appspot.com") // Replace with your Firebase Storage bucket URL
+            .setProjectId("socialmedia-b9148")
+            .setApplicationId("1:924036427672:android:75e24d5ebe6dd3f35cc5ed")
+            .setApiKey("AIzaSyBLVNr5M0sHOTtGpqBvn8ula-knHx0vxvc")
+            .setStorageBucket("socialmedia-b9148.appspot.com")
             .build()
 
-        // Initialize Firebase with these options, giving it a different name
         FirebaseApp.initializeApp(this, storageOptions, "storageApp")
     }
 }
@@ -54,12 +58,10 @@ fun RecipientApp() {
     val navController = rememberNavController()
     val recipientHomeViewModel: RecipientHomeViewModel = viewModel()
 
-    // Get the storage app instance
     val storageApp = remember {
         FirebaseApp.getInstance("storageApp")
     }
 
-    // Initialize storage in the ViewModel
     LaunchedEffect(Unit) {
         recipientHomeViewModel.initializeStorage(storageApp)
     }
@@ -75,9 +77,34 @@ fun RecipientApp() {
             composable(RecipientScreen.RecipientHome.route) {
                 Recipienthome(viewModel = recipientHomeViewModel)
             }
-            composable(RecipientScreen.RecipientSearchDonors.route) { Recipientsearchdonors() }
-            composable(RecipientScreen.RecipientSearchHospitals.route) { Recipientsearchhospitals() }
-            composable(RecipientScreen.RecipientNotifications.route) { Recipientnotifications() }
+            composable(RecipientScreen.RecipientSearchDonors.route) {
+                Recipientsearchdonors(navController = navController)
+            }
+            composable(RecipientScreen.RecipientSearchHospitals.route) {
+                RecipientSearchHospitals(navigateToHospitalDetail = { hospitalId ->
+                    // Handle hospital detail navigation
+                    navController.navigate(HospitalRoutes.HospitalDetail.createRoute(hospitalId))
+                })
+            }
+            // Here's the fixed part for RecipientNotifications
+            composable(RecipientScreen.RecipientNotifications.route) {
+                // Make sure to provide the fragment directly from the package
+                RecipientNotificationsScreen()
+            }
+            composable(
+                route = DonorRoutes.DonorDetail.route,
+                arguments = listOf(navArgument("donorId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val donorId = backStackEntry.arguments?.getString("donorId") ?: ""
+                DonorDetailScreen(donorId = donorId, onBackPressed = { navController.popBackStack() })
+            }
+            composable(
+                route = HospitalRoutes.HospitalDetail.route,
+                arguments = listOf(navArgument("hospitalId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val hospitalId = backStackEntry.arguments?.getString("hospitalId") ?: ""
+                HospitalDetailScreen(hospitalId = hospitalId, onBackClick = { navController.popBackStack() })
+            }
         }
     }
 }
@@ -91,27 +118,41 @@ fun RecipientBottomNavigation(navController: NavHostController) {
         RecipientScreen.RecipientNotifications
     )
 
-    var selectedScreen by remember { mutableStateOf(RecipientScreen.RecipientHome.route) }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar {
+    NavigationBar(
+        tonalElevation = 4.dp,
+        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+    ) {
         screens.forEach { screen ->
             NavigationBarItem(
                 icon = {
                     Icon(
                         painter = painterResource(id = getRecipientIcon(screen.route)),
-                        contentDescription = screen.route
+                        contentDescription = screen.route,
+                        modifier = Modifier.size(24.dp) // Reduced icon size
                     )
                 },
-                label = { Text(screen.route.replaceFirstChar { it.uppercase() }) },
-                selected = selectedScreen == screen.route,
+                selected = currentRoute == screen.route,
                 onClick = {
-                    selectedScreen = screen.route
                     navController.navigate(screen.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                alwaysShowLabel = false,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                )
             )
         }
     }
@@ -120,10 +161,10 @@ fun RecipientBottomNavigation(navController: NavHostController) {
 @Composable
 fun getRecipientIcon(route: String): Int {
     return when (route) {
-        RecipientScreen.RecipientHome.route -> R.drawable.recipient
-        RecipientScreen.RecipientSearchDonors.route -> R.drawable.recipient
-        RecipientScreen.RecipientSearchHospitals.route -> R.drawable.recipient
-        RecipientScreen.RecipientNotifications.route -> R.drawable.recipient
+        RecipientScreen.RecipientHome.route -> R.drawable.home
+        RecipientScreen.RecipientSearchDonors.route -> R.drawable.searchdonor
+        RecipientScreen.RecipientSearchHospitals.route -> R.drawable.searchicon
+        RecipientScreen.RecipientNotifications.route -> R.drawable.notification// Changed to a notification icon
         else -> R.drawable.recipient
     }
 }
@@ -133,4 +174,7 @@ sealed class RecipientScreen(val route: String) {
     object RecipientSearchDonors : RecipientScreen("recipientsearchdonors")
     object RecipientSearchHospitals : RecipientScreen("recipientsearchhospitals")
     object RecipientNotifications : RecipientScreen("recipientnotifications")
+    object RecipientDonorDetail : RecipientScreen("donorDetail/{donorId}") {
+        fun createRoute(donorId: String) = "donorDetail/$donorId"
+    }
 }

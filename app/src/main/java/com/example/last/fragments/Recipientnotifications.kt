@@ -1,60 +1,141 @@
-package com.example.last.fragments
+package com.example.last.viewmodels
 
-import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import com.example.last.R
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import android.util.Log
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+data class NotificationData(
+    val notificationId: String = "",
+    val hospitalName: String = "",
+    val status: String = "",
+    val timestamp: Long = 0,
+    val responseMessage: String? = null,
+    val requestId: String = "",
+    val type: NotificationType = NotificationType.HOSPITAL
+)
 
-/**
- * A simple [Fragment] subclass.
- * Use the [Recipientnotifications.newInstance] factory method to
- * create an instance of this fragment.
- */
-class Recipientnotifications : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+enum class NotificationType {
+    HOSPITAL, DONOR
+}
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+class RecipientNotificationsViewModel : ViewModel() {
+    private val _notifications = MutableStateFlow<List<NotificationData>>(emptyList())
+    val notifications: StateFlow<List<NotificationData>> = _notifications.asStateFlow()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_recipientnotifications, container, false)
-    }
+    var isLoading by mutableStateOf(false)
+    var error by mutableStateOf<String?>(null)
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment Recipientnotifications.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            Recipientnotifications().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    private val database = FirebaseDatabase.getInstance().reference
+    private val auth = FirebaseAuth.getInstance()
+
+    fun fetchNotifications() {
+        val currentUser = auth.currentUser ?: return
+        isLoading = true
+        error = null
+
+        Log.d("RecipientNotificationsVM", "Fetching notifications for user: ${currentUser.uid}")
+
+        // Fetching hospital notifications
+        database.child("recipient_notifications").child(currentUser.uid)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val notificationList = mutableListOf<NotificationData>()
+
+                    for (notificationSnapshot in snapshot.children) {
+                        val notificationId = notificationSnapshot.child("notificationId").getValue(String::class.java) ?: ""
+                        val hospitalName = notificationSnapshot.child("hospitalName").getValue(String::class.java) ?: ""
+                        val status = notificationSnapshot.child("status").getValue(String::class.java) ?: ""
+                        val timestamp = notificationSnapshot.child("timestamp").getValue(Long::class.java) ?: 0L
+                        val responseMessage = notificationSnapshot.child("responseMessage").getValue(String::class.java)
+                        val requestId = notificationSnapshot.child("requestId").getValue(String::class.java) ?: ""
+
+                        val notification = NotificationData(
+                            notificationId = notificationId,
+                            hospitalName = hospitalName,
+                            status = status,
+                            timestamp = timestamp,
+                            responseMessage = responseMessage,
+                            requestId = requestId,
+                            type = NotificationType.HOSPITAL
+                        )
+
+                        notificationList.add(notification)
+                        Log.d("RecipientNotificationsVM", "Found hospital notification: $notificationId from $hospitalName")
+                    }
+
+                    // Fetching donor requests
+                    fetchDonorRequests(currentUser.uid, notificationList)
                 }
+
+                override fun onCancelled(error: DatabaseError) {
+                    this@RecipientNotificationsViewModel.error = error.message
+                    isLoading = false
+                    Log.e("RecipientNotificationsVM", "Error loading notifications: ${error.message}")
+                }
+            })
+    }
+
+    private fun fetchDonorRequests(userId: String, notificationList: MutableList<NotificationData>) {
+        // Fetching donor requests
+        database.child("contactRequests").child(userId)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (requestSnapshot in snapshot.children) {
+                        val notificationId = requestSnapshot.child("requestId").getValue(String::class.java) ?: ""
+                        val status = requestSnapshot.child("status").getValue(String::class.java) ?: ""
+                        val timestamp = requestSnapshot.child("timestamp").getValue(Long::class.java) ?: 0L
+                        val responseMessage = requestSnapshot.child("responseMessage").getValue(String::class.java)
+                        val requestId = requestSnapshot.child("requestId").getValue(String::class.java) ?: ""
+
+                        val notification = NotificationData(
+                            notificationId = notificationId,
+                            hospitalName = "Donor Request",
+                            status = status,
+                            timestamp = timestamp,
+                            responseMessage = responseMessage,
+                            requestId = requestId,
+                            type = NotificationType.DONOR
+                        )
+
+                        notificationList.add(notification)
+                        Log.d("RecipientNotificationsVM", "Found donor request notification: $notificationId")
+                    }
+
+                    // Sort by timestamp (newest first)
+                    notificationList.sortByDescending { it.timestamp }
+                    _notifications.value = notificationList
+                    isLoading = false
+                    Log.d("RecipientNotificationsVM", "Loaded ${notificationList.size} notifications")
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    this@RecipientNotificationsViewModel.error = error.message
+                    isLoading = false
+                    Log.e("RecipientNotificationsVM", "Error loading donor requests: ${error.message}")
+                }
+            })
+    }
+
+    fun markAsRead(notificationId: String) {
+        val currentUser = auth.currentUser ?: return
+
+        database.child("recipient_notifications")
+            .child(currentUser.uid)
+            .child(notificationId)
+            .child("read")
+            .setValue(true)
+            .addOnSuccessListener {
+                Log.d("RecipientNotificationsVM", "Notification marked as read: $notificationId")
+            }
+            .addOnFailureListener { e ->
+                Log.e("RecipientNotificationsVM", "Error marking notification as read", e)
             }
     }
 }
